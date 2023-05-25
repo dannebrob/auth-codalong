@@ -27,6 +27,16 @@ const User = mongoose.model('User', {
   }
 });
 
+const authenticateUser = async (req, res, next) => {
+  const user = await User.findOne({ accessToken: req.header('Authorization') });
+  if (user) {
+    req.user = user;
+    next();
+  } else {
+    res.status(401).json({ loggedOut: true });
+  }
+};
+
 // Defines the port the app will run on. Defaults to 8080, but can be overridden
 // when starting the server. Example command to overwrite PORT env variable value:
 // PORT=9000 npm start
@@ -45,6 +55,7 @@ app.get('/', (req, res) => {
 app.post('/users', async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    // DO NOT STORE PLAIN TEXT PASSWORDS
     const user = new User({ name, email, password: bcrypt.hashSync(password) });
     const saved = await user.save();
     res.status(201).json({ id: user._id, accessToken: user.accessToken });
