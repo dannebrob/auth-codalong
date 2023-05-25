@@ -66,8 +66,18 @@ app.post('/users', async (req, res) => {
   }
 });
 
+app.get('/secrets', authenticateUser);
 app.get('/secrets', (req, res) => {
-  res.json({ secret: 'this is a super secret message' });
+  res.json({ secret: 'this is a super secret message, you are logged in' });
+});
+
+app.post('/sessions', async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (user && bcrypt.compareSync(req.body.password, user.password)) {
+    res.json({ userId: user._id, accessToken: user.accessToken });
+  } else {
+    res.json({ notFound: true });
+  }
 });
 
 // Start the server
